@@ -1,5 +1,8 @@
 package EMS.backend.entity;
 
-public class Role {
-    
+public enum Role {
+    ADMIN,
+    HR,
+    MANAGER,
+    EMPLOYEE
 }
