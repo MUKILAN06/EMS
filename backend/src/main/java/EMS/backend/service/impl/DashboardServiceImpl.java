@@ -26,6 +26,9 @@ public class DashboardServiceImpl implements DashboardService {
     private IssueRepository issueRepository;
 
     @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Override
@@ -47,6 +50,8 @@ public class DashboardServiceImpl implements DashboardService {
 
     private DashboardDTO buildStats() {
         long totalEmployees = employeeRepository.count();
+        long totalDepartments = departmentRepository.count();
+        long totalUsers = userRepository.count();
         long pendingLeaves = leaveRepository.findByStatus(LeaveStatus.PENDING_HR).size() +
                              leaveRepository.findByStatus(LeaveStatus.PENDING_MANAGER).size();
         long activeTasks = taskRepository.findAll().stream().filter(t -> !t.isCompleted()).count();
@@ -57,6 +62,8 @@ public class DashboardServiceImpl implements DashboardService {
 
         return DashboardDTO.builder()
                 .totalEmployees(totalEmployees)
+                .totalDepartments(totalDepartments)
+                .totalUsers(totalUsers)
                 .pendingLeaves(pendingLeaves)
                 .activeTasks(activeTasks)
                 .resolvedIssues(resolvedIssues)
