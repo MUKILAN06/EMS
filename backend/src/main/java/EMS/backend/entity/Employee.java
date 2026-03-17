@@ -2,6 +2,9 @@ package EMS.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import EMS.backend.entity.User;
+import EMS.backend.entity.Department;
+import EMS.backend.entity.Role;
 
 @Entity
 @Table(name = "employees")
