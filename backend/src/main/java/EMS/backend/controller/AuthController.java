@@ -40,15 +40,15 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
  
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+ 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         
         // ADMIN is pre-verified or doesn't need verification
-        if (!userDetails.isVerified() && !userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+        if (!userDetails.isEnabled() && !userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: User account is not verified yet!"));
         }
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
 
         String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
  

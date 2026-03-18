@@ -20,7 +20,6 @@ const Sidebar = () => {
   const menuItems = {
     ADMIN: [
       { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/admin/employee-creation', label: 'Add Employee', icon: Users },
       { path: '/admin/hr-creation', label: 'Create HR', icon: UserCheck },
       { path: '/admin/departments', label: 'Departments', icon: Briefcase },
     ],
