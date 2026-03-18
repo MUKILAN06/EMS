@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { AlertCircle, Plus, Send, Radio, MessageSquare, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Plus, Send, MessageSquare, ShieldCheck } from 'lucide-react';
 
 const IssueTracker = () => {
   const [issues, setIssues] = useState([]);
@@ -10,7 +9,6 @@ const IssueTracker = () => {
     description: '',
     assignedToUserId: ''
   });
-  const [users, setUsers] = useState([]); // List of possible assignees
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { UserCheck, Check, Building, User, Briefcase } from 'lucide-react';
+import { UserCheck, Check } from 'lucide-react';
 
 const EmployeeVerification = () => {
   const [unverified, setUnverified] = useState([]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Briefcase, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Clock } from 'lucide-react';
 
 const MyTasks = () => {
   const [tasks, setTasks] = useState([]);

@@ -3,7 +3,6 @@ import api from '../services/api';
 import { Briefcase, Send, Users, ClipboardList } from 'lucide-react';
 
 const TaskAssignment = () => {
-  const [employees, setEmployees] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',

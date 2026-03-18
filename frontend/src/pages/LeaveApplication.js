@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Calendar, Send, History, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Send, History, Clock } from 'lucide-react';
 
 const LeaveApplication = () => {
   const [formData, setFormData] = useState({

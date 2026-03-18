@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Banknote, Save, User, Search, DollarSign } from 'lucide-react';
+import { Banknote, Save, DollarSign } from 'lucide-react';
 
 const HRSalaryManagement = () => {
   const [employees, setEmployees] = useState([]);
@@ -10,7 +10,6 @@ const HRSalaryManagement = () => {
     notes: ''
   });
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchEmployees();
