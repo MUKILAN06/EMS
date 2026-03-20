@@ -1,4 +1,4 @@
- npackage EMS.backend.controller;
+package EMS.backend.controller;
 
 import EMS.backend.service.DashboardService;
 import EMS.backend.service.UserDetailsImpl;
