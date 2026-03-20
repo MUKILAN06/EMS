@@ -43,8 +43,11 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public DashboardDTO getManagerStats(Long userId) {
-        // Manager stats could be filtered by its managed employees, 
-        // but for now providing overall as requested by "analytics dashboard: show in admin,HR,manager"
+        return buildStats();
+    }
+
+    @Override
+    public DashboardDTO getEmployeeStats() {
         return buildStats();
     }
 
