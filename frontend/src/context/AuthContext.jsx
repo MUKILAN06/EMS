@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api/axios';
+import api from '../services/api';
 
 const AuthContext = createContext();
-
-export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -18,17 +16,17 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const res = await api.post('/auth/signin', { email, password });
-      const { token, ...userData } = res.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err.response?.data?.message || 'Login failed' };
-    }
+  const login = async (username, password) => {
+    const response = await api.post('/auth/login', { username, password });
+    const { token, ...userData } = response.data;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
+  };
+
+  const signup = async (username, email, password, role) => {
+    return await api.post('/auth/signup', { username, email, password, role });
   };
 
   const logout = () => {
@@ -37,13 +35,11 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const isAdmin = () => user?.role === 'ADMIN';
-  const isHR = () => user?.role === 'HR';
-  const isManager = () => user?.role === 'MANAGER';
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAdmin, isHR, isManager }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

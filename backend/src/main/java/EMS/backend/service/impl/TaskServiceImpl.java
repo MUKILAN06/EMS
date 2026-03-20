@@ -1,81 +1,75 @@
 package EMS.backend.service.impl;
 
-import EMS.backend.dto.TaskDTO;
-import EMS.backend.entity.Task;
+import EMS.backend.dto.WorkTaskDTO;
+import EMS.backend.entity.Employee;
 import EMS.backend.entity.User;
-import EMS.backend.repository.TaskRepository;
+import EMS.backend.entity.WorkTask;
+import EMS.backend.repository.EmployeeRepository;
 import EMS.backend.repository.UserRepository;
+import EMS.backend.repository.WorkTaskRepository;
 import EMS.backend.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class TaskServiceImpl implements TaskService {
 
     @Autowired
-    private TaskRepository taskRepository;
+    private WorkTaskRepository taskRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     @Override
-    public Task createTask(TaskDTO dto) {
-        User user = userRepository.findById(dto.getAssignedToId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public WorkTask assignTask(WorkTaskDTO dto, Long managerUserId) {
+        User manager = userRepository.findById(managerUserId)
+                .orElseThrow(() -> new RuntimeException("Manager not found"));
 
-        Task task = Task.builder()
+        Employee employee = employeeRepository.findById(dto.getAssignedToId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        WorkTask task = WorkTask.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())
-                .assignedTo(user)
-                .dueDate(dto.getDueDate())
+                .assignedTo(employee)
+                .assignedBy(manager)
+                .assignedAt(LocalDateTime.now())
                 .completed(false)
                 .build();
         return taskRepository.save(task);
     }
 
     @Override
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<WorkTask> getEmployeeTasks(Long userId) {
+        Employee employee = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        return taskRepository.findByAssignedTo(employee);
     }
 
     @Override
-    public Task getTaskById(Long id) {
-        return taskRepository.findById(id)
+    public List<WorkTask> getTasksByManager(Long managerUserId) {
+        User manager = userRepository.findById(managerUserId)
+                .orElseThrow(() -> new RuntimeException("Manager not found"));
+        return taskRepository.findAll().stream()
+                .filter(t -> t.getAssignedBy().getId().equals(managerUserId))
+                .toList();
+    }
+
+    @Override
+    public WorkTask completeTask(Long taskId, Long userId) {
+        WorkTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-    }
-
-    @Override
-    public Task updateTask(Long id, TaskDTO dto) {
-        Task task = getTaskById(id);
-        task.setTitle(dto.getTitle());
-        task.setDescription(dto.getDescription());
-        if (dto.getAssignedToId() != null) {
-            User user = userRepository.findById(dto.getAssignedToId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            task.setAssignedTo(user);
+        
+        if (!task.getAssignedTo().getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to complete this task");
         }
-        task.setDueDate(dto.getDueDate());
-        task.setCompleted(dto.isCompleted());
-        return taskRepository.save(task);
-    }
 
-    @Override
-    public void deleteTask(Long id) {
-        taskRepository.deleteById(id);
-    }
-
-    @Override
-    public List<Task> getTasksByUserId(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return taskRepository.findByAssignedTo(user);
-    }
-
-    @Override
-    public Task completeTask(Long id) {
-        Task task = getTaskById(id);
         task.setCompleted(true);
         return taskRepository.save(task);
     }

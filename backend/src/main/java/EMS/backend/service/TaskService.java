@@ -1,15 +1,12 @@
 package EMS.backend.service;
 
-import EMS.backend.dto.TaskDTO;
-import EMS.backend.entity.Task;
+import EMS.backend.dto.WorkTaskDTO;
+import EMS.backend.entity.WorkTask;
 import java.util.List;
 
 public interface TaskService {
-    Task createTask(TaskDTO taskDTO);
-    List<Task> getAllTasks();
-    Task getTaskById(Long id);
-    Task updateTask(Long id, TaskDTO taskDTO);
-    void deleteTask(Long id);
-    List<Task> getTasksByUserId(Long userId);
-    Task completeTask(Long id);
+    WorkTask assignTask(WorkTaskDTO dto, Long managerUserId);
+    List<WorkTask> getEmployeeTasks(Long userId);
+    List<WorkTask> getTasksByManager(Long managerUserId);
+    WorkTask completeTask(Long taskId, Long userId);
 }

@@ -2,9 +2,8 @@ package EMS.backend.service;
 
 import EMS.backend.dto.AuthRequest;
 import EMS.backend.dto.AuthResponse;
-import EMS.backend.dto.RegistrationRequest;
 
 public interface AuthService {
-    AuthResponse authenticate(AuthRequest request);
-    AuthResponse register(RegistrationRequest request);
+    AuthResponse login(AuthRequest authRequest);
+    String register(AuthRequest registerRequest); // Simplified for now using AuthRequest if needed, or I'll add more fields
 }

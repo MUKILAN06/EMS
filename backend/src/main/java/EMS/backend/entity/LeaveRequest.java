@@ -17,7 +17,7 @@ public class LeaveRequest {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "employee_id", nullable = false)
-    private User employee;
+    private Employee employee;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -30,8 +30,5 @@ public class LeaveRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
-    private LeaveStatus status = LeaveStatus.PENDING_MANAGER;
-
-    private String rejectionReason;
+    private LeaveStatus status = LeaveStatus.PENDING_HR;
 }
