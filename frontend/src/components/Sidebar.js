@@ -20,8 +20,10 @@ const Sidebar = () => {
   const menuItems = {
     ADMIN: [
       { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+      { path: '/admin/employee-creation', label: 'Create Employee', icon: UserPlus },
       { path: '/admin/hr-creation', label: 'Create HR', icon: UserCheck },
       { path: '/admin/departments', label: 'Departments', icon: Briefcase },
+      { path: '/admin/calendar', label: 'Calendar', icon: Calendar },
     ],
     HR: [
       { path: '/hr', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,11 +31,13 @@ const Sidebar = () => {
       { path: '/hr/manager-creation', label: 'Add Manager', icon: UserPlus },
       { path: '/hr/leaves', label: 'Leaves', icon: Calendar },
       { path: '/hr/salaries', label: 'Salaries', icon: Banknote },
+      { path: '/hr/calendar', label: 'Calendar', icon: Calendar },
     ],
     MANAGER: [
       { path: '/manager', label: 'Dashboard', icon: LayoutDashboard },
       { path: '/manager/tasks', label: 'Assign Tasks', icon: Briefcase },
       { path: '/manager/leaves', label: 'Leave Requests', icon: Calendar },
+      { path: '/manager/calendar', label: 'Calendar', icon: Calendar },
     ],
     EMPLOYEE: [
       { path: '/employee', label: 'Dashboard', icon: LayoutDashboard },
@@ -41,6 +45,7 @@ const Sidebar = () => {
       { path: '/employee/tasks', label: 'My Tasks', icon: Briefcase },
       { path: '/employee/salary', label: 'My Salary', icon: Banknote },
       { path: '/employee/issues', label: 'Issues', icon: AlertCircle },
+      { path: '/employee/calendar', label: 'Work Calendar', icon: Calendar },
     ]
   };
 
