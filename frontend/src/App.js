@@ -1,55 +1,70 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
-import Tasks from './pages/Tasks';
-import Leave from './pages/Leave';
-import IssueTracker from './pages/IssueTracker';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 import Login from './pages/Login';
 import CalendarPage from './pages/CalendarPage';
+import HRCreation from './pages/HRCreation';
 import EmployeeCreation from './pages/EmployeeCreation';
-import './App.css';
-
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  return user ? children : <Navigate to="/login" />;
-};
+import Departments from './pages/Departments';
+import EmployeeVerification from './pages/EmployeeVerification';
+import HRLeaveManagement from './pages/HRLeaveManagement';
+import HRSalaryManagement from './pages/HRSalaryManagement';
+import ManagerLeaveApproval from './pages/ManagerLeaveApproval';
+import ManagerCreation from './pages/ManagerCreation';
+import TaskAssignment from './pages/TaskAssignment';
+import LeaveApplication from './pages/LeaveApplication';
+import MyTasks from './pages/MyTasks';
+import MySalary from './pages/MySalary';
+import IssueTracker from './pages/IssueTracker';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-slate-50">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <div className="flex flex-col min-h-screen">
-                    <Navbar />
-                    <main className="flex-1 p-4 md:p-8 lg:p-12">
-                      <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/tasks" element={<Tasks />} />
-                        <Route path="/leave" element={<Leave />} />
-                        <Route path="/issues" element={<IssueTracker />} />
-                        <Route path="/calendar" element={<CalendarPage />} />
-                        <Route path="/create-employee" element={<EmployeeCreation />} />
-                        {/* Add more routes as implemented */}
-                      </Routes>
-                    </main>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/admin" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/admin/employee-creation" element={<Layout><EmployeeCreation /></Layout>} />
+            <Route path="/admin/hr-creation" element={<Layout><HRCreation /></Layout>} />
+            <Route path="/admin/departments" element={<Layout><Departments /></Layout>} />
+            <Route path="/admin/calendar" element={<Layout><CalendarPage /></Layout>} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['HR']} />}>
+            <Route path="/hr" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/hr/verification" element={<Layout><EmployeeVerification /></Layout>} />
+            <Route path="/hr/manager-creation" element={<Layout><ManagerCreation /></Layout>} />
+            <Route path="/hr/leaves" element={<Layout><HRLeaveManagement /></Layout>} />
+            <Route path="/hr/salaries" element={<Layout><HRSalaryManagement /></Layout>} />
+            <Route path="/hr/calendar" element={<Layout><CalendarPage /></Layout>} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['MANAGER']} />}>
+            <Route path="/manager" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/manager/tasks" element={<Layout><TaskAssignment /></Layout>} />
+            <Route path="/manager/leaves" element={<Layout><ManagerLeaveApproval /></Layout>} />
+            <Route path="/manager/calendar" element={<Layout><CalendarPage /></Layout>} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
+            <Route path="/employee" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/employee/apply-leave" element={<Layout><LeaveApplication /></Layout>} />
+            <Route path="/employee/tasks" element={<Layout><MyTasks /></Layout>} />
+            <Route path="/employee/salary" element={<Layout><MySalary /></Layout>} />
+            <Route path="/employee/issues" element={<Layout><IssueTracker /></Layout>} />
+            <Route path="/employee/calendar" element={<Layout><CalendarPage /></Layout>} />
+          </Route>
+
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/unauthorized" element={<div className="p-10 text-center">Unauthorized Access</div>} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -3,16 +3,18 @@ package EMS.backend.service.impl;
 import EMS.backend.config.JwtService;
 import EMS.backend.dto.AuthRequest;
 import EMS.backend.dto.AuthResponse;
-import EMS.backend.dto.RegistrationRequest;
+import EMS.backend.entity.Role;
 import EMS.backend.entity.User;
 import EMS.backend.repository.UserRepository;
 import EMS.backend.service.AuthService;
-import EMS.backend.service.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -24,16 +26,25 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public AuthResponse authenticate(AuthRequest request) {
+    public AuthResponse login(AuthRequest authRequest) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        authRequest.getEmail(),
+                        authRequest.getPassword()
+                )
+        );
+        var user = userRepository.findByEmail(authRequest.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        
+        // Constructing a standard Spring Security User for JwtService generateToken
+        var springUser = new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                Collections.emptyList() // Authorities logic can be added if needed
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String jwtToken = jwtService.generateToken(UserDetailsImpl.build(user));
-
+        var jwtToken = jwtService.generateToken(springUser);
+        
         return AuthResponse.builder()
                 .token(jwtToken)
                 .id(user.getId())
@@ -44,29 +55,23 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse register(RegistrationRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+    public String register(AuthRequest registerRequest) {
+        // Use username if available, otherwise use part of email
+        String username = registerRequest.getEmail().split("@")[0];
+        
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .verified(true) // Autoverify for now
+        var user = User.builder()
+                .username(username)
+                .email(registerRequest.getEmail())
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .role(Role.EMPLOYEE) // Default role
+                .verified(true)
                 .build();
-
+        
         userRepository.save(user);
-
-        String jwtToken = jwtService.generateToken(UserDetailsImpl.build(user));
-
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build();
+        return "User registered successfully";
     }
 }

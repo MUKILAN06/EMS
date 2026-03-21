@@ -1,48 +1,108 @@
 package EMS.backend.controller;
 
 import EMS.backend.dto.LeaveRequestDTO;
-import EMS.backend.entity.LeaveRequest;
-import EMS.backend.entity.LeaveStatus;
-import EMS.backend.service.LeaveService;
+import EMS.backend.dto.MessageResponse;
+import EMS.backend.entity.*;
+import EMS.backend.repository.EmployeeRepository;
+import EMS.backend.repository.LeaveRequestRepository;
+import EMS.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/leaves")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class LeaveController {
+    @Autowired
+    LeaveRequestRepository leaveRequestRepository;
 
     @Autowired
-    private LeaveService leaveService;
+    EmployeeRepository employeeRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @PostMapping("/apply")
-    public ResponseEntity<LeaveRequest> applyLeave(@RequestBody LeaveRequestDTO dto) {
-        return ResponseEntity.ok(leaveService.applyLeave(dto));
+    @PreAuthorize("hasAuthority('EMPLOYEE')")
+    public ResponseEntity<?> applyLeave(@RequestBody LeaveRequestDTO leaveRequestDTO, Authentication authentication) {
+        User user = userRepository.findByUsername(authentication.getName()).get();
+        Employee employee = employeeRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Error: Employee record not found."));
+
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .employee(employee)
+                .startDate(leaveRequestDTO.getStartDate())
+                .endDate(leaveRequestDTO.getEndDate())
+                .reason(leaveRequestDTO.getReason())
+                .status(LeaveStatus.PENDING_HR)
+                .build();
+
+        leaveRequestRepository.save(leaveRequest);
+        return ResponseEntity.ok(new MessageResponse("Leave application submitted (Pending HR)."));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<LeaveRequest>> getAllLeaves() {
-        return ResponseEntity.ok(leaveService.getAllLeaves());
+    @GetMapping("/hr/pending")
+    @PreAuthorize("hasAuthority('HR')")
+    public ResponseEntity<?> getPendingHR() {
+        return ResponseEntity.ok(leaveRequestRepository.findByStatus(LeaveStatus.PENDING_HR));
     }
 
-    @GetMapping("/employee/{id}")
-    public ResponseEntity<List<LeaveRequest>> getLeavesByEmployee(@PathVariable Long id) {
-        return ResponseEntity.ok(leaveService.getLeavesByEmployee(id));
+    @PostMapping("/hr/review/{id}")
+    @PreAuthorize("hasAuthority('HR')")
+    public ResponseEntity<?> hrReview(@PathVariable Long id, @RequestParam boolean approve) {
+        LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error: Leave request not found."));
+
+        if (leaveRequest.getStatus() != LeaveStatus.PENDING_HR) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid status for HR review."));
+        }
+
+        if (approve) {
+            leaveRequest.setStatus(LeaveStatus.PENDING_MANAGER);
+            leaveRequestRepository.save(leaveRequest);
+            return ResponseEntity.ok(new MessageResponse("Leave approved by HR (Pending Manager)."));
+        } else {
+            leaveRequest.setStatus(LeaveStatus.REJECTED);
+            leaveRequestRepository.save(leaveRequest);
+            return ResponseEntity.ok(new MessageResponse("Leave rejected by HR."));
+        }
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<LeaveRequest> updateLeaveStatus(
-            @PathVariable Long id, 
-            @RequestParam LeaveStatus status,
-            @RequestParam(required = false) String rejectionReason) {
-        return ResponseEntity.ok(leaveService.updateLeaveStatus(id, status, rejectionReason));
+    @GetMapping("/manager/pending")
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public ResponseEntity<?> getPendingManager() {
+        return ResponseEntity.ok(leaveRequestRepository.findByStatus(LeaveStatus.PENDING_MANAGER));
     }
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<LeaveRequest>> getLeavesByStatus(@PathVariable LeaveStatus status) {
-        return ResponseEntity.ok(leaveService.getLeavesByStatus(status));
+    @PostMapping("/manager/review/{id}")
+    @PreAuthorize("hasAuthority('MANAGER')")
+    public ResponseEntity<?> managerReview(@PathVariable Long id, @RequestParam boolean approve) {
+        LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error: Leave request not found."));
+
+        if (leaveRequest.getStatus() != LeaveStatus.PENDING_MANAGER) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid status for Manager review."));
+        }
+
+        if (approve) {
+            leaveRequest.setStatus(LeaveStatus.APPROVED);
+            leaveRequestRepository.save(leaveRequest);
+            return ResponseEntity.ok(new MessageResponse("Leave approved by Manager (Final)."));
+        } else {
+            leaveRequest.setStatus(LeaveStatus.REJECTED);
+            leaveRequestRepository.save(leaveRequest);
+            return ResponseEntity.ok(new MessageResponse("Leave rejected by Manager."));
+        }
+    }
+
+    @GetMapping("/my-leaves")
+    @PreAuthorize("hasAuthority('EMPLOYEE')")
+    public ResponseEntity<?> getMyLeaves(Authentication authentication) {
+        User user = userRepository.findByUsername(authentication.getName()).get();
+        Employee employee = employeeRepository.findByUser(user).get();
+        return ResponseEntity.ok(leaveRequestRepository.findByEmployee(employee));
     }
 }

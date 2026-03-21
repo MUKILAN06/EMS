@@ -1,43 +1,58 @@
 package EMS.backend.controller;
 
-import EMS.backend.entity.Employee;
-import EMS.backend.service.EmployeeService;
+import EMS.backend.dto.LeaveRequestDTO;
+import EMS.backend.service.LeaveService;
+import EMS.backend.service.SalaryService;
+import EMS.backend.service.TaskService;
+import EMS.backend.service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping("/api/employee")
+@PreAuthorize("hasRole('EMPLOYEE')")
 public class EmployeeController {
 
     @Autowired
-    private EmployeeService employeeService;
+    private LeaveService leaveService;
+ 
+    @Autowired
+    private TaskService taskService;
 
-    @GetMapping("/all")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('HR')")
-    public ResponseEntity<List<Employee>> getAllEmployees() {
-        return ResponseEntity.ok(employeeService.getAllEmployees());
+    @Autowired
+    private SalaryService salaryService;
+
+    @PostMapping("/leave/request")
+    public ResponseEntity<?> requestLeave(@RequestBody LeaveRequestDTO dto, Authentication auth) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        return ResponseEntity.ok(leaveService.createLeaveRequest(dto, userDetails.getId()));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-        return ResponseEntity.ok(employeeService.getEmployeeById(id));
+    @GetMapping("/leaves")
+    public ResponseEntity<?> getMyLeaves(Authentication auth) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        return ResponseEntity.ok(leaveService.getEmployeeLeaves(userDetails.getId()));
+    }
+ 
+    @GetMapping("/tasks")
+    public ResponseEntity<?> getMyTasks(Authentication auth) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        return ResponseEntity.ok(taskService.getEmployeeTasks(userDetails.getId()));
+    }
+ 
+    @PostMapping("/task/complete/{id}")
+    public ResponseEntity<?> completeTask(@PathVariable Long id, Authentication auth) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        return ResponseEntity.ok(taskService.completeTask(id, userDetails.getId()));
     }
 
-    @PostMapping("/save")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('HR')")
-    public ResponseEntity<Employee> saveEmployee(@RequestBody Employee employee) {
-        return ResponseEntity.ok(employeeService.saveEmployee(employee));
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('HR')")
-    public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
-        employeeService.deleteEmployee(id);
-        return ResponseEntity.ok("Employee deleted successfully");
+    @GetMapping("/salary")
+    public ResponseEntity<?> getMySalary(Authentication auth) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        return ResponseEntity.ok(salaryService.getEmployeeSalary(userDetails.getId()));
     }
 }
